@@ -13,6 +13,23 @@ export interface Thread {
   fetched_at: string;
 }
 
+export type DismissReason =
+  | "wrong_stack"
+  | "no_visa"
+  | "not_remote"
+  | "not_developer"
+  | "location_gated"
+  | "low_pay";
+
+export const DISMISS_REASONS: { value: DismissReason; label: string }[] = [
+  { value: "wrong_stack", label: "Wrong stack" },
+  { value: "no_visa", label: "No visa / work permit" },
+  { value: "not_remote", label: "Not remote first" },
+  { value: "not_developer", label: "Not a developer role" },
+  { value: "location_gated", label: "Location gated / blocked" },
+  { value: "low_pay", label: "Low pay" },
+];
+
 export interface Post {
   id: number;
   thread_id: number;
@@ -24,6 +41,7 @@ export interface Post {
   status: PostStatus;
   notes: string | null;
   applied_at: string | null;
+  dismiss_reason: string | null;
   updated_at: string;
   created_at: string;
 }
