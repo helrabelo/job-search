@@ -52,6 +52,25 @@ The SQLite database is created automatically on first request. No configuration 
 | `npm run start` | Start production server |
 | `npm run scrape` | Scrape HN threads from CLI |
 
+## Auto-Scrape (Cron)
+
+New "Who is Hiring?" threads are posted on the 1st of each month around 11 AM ET. You can set up a cron job to scrape automatically so new posts are waiting for you.
+
+```bash
+# Edit your crontab
+crontab -e
+
+# Scrape every 6 hours on the 1st-3rd of each month (catches the thread + stragglers)
+0 */6 1-3 * * cd /path/to/job-search && npm run scrape >> /tmp/hn-scrape.log 2>&1
+
+# Or scrape daily if you prefer
+0 9 * * * cd /path/to/job-search && npm run scrape >> /tmp/hn-scrape.log 2>&1
+```
+
+Replace `/path/to/job-search` with your actual project path. The scraper is idempotent — it skips posts already in the database, so running it often is safe.
+
+You can also scrape manually anytime by clicking **Refresh** in the UI or running `npm run scrape`.
+
 ## Project Structure
 
 ```
