@@ -11,16 +11,19 @@ interface PostListProps {
     remote: boolean;
     search: string;
     threadId: string;
+    matchKeywords: boolean;
   };
   refreshKey: number;
+  onPostUpdate?: () => void;
 }
 
-export function PostList({ filters, refreshKey }: PostListProps) {
+export function PostList({ filters, refreshKey, onPostUpdate }: PostListProps) {
   const [posts, setPosts] = useState<(Post & { month?: string })[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [profileKeywords, setProfileKeywords] = useState<string[]>([]);
   const [selectedPost, setSelectedPost] = useState<
     (Post & { month?: string }) | null
   >(null);
@@ -32,6 +35,7 @@ export function PostList({ filters, refreshKey }: PostListProps) {
     if (filters.remote) params.set("remote", "1");
     if (filters.search) params.set("search", filters.search);
     if (filters.threadId) params.set("thread_id", filters.threadId);
+    if (filters.matchKeywords) params.set("match_keywords", "1");
     params.set("page", String(page));
 
     try {
@@ -40,6 +44,7 @@ export function PostList({ filters, refreshKey }: PostListProps) {
       setPosts(data.posts);
       setTotal(data.total);
       setTotalPages(data.totalPages);
+      setProfileKeywords(data.profileKeywords ?? []);
     } catch (err) {
       console.error("Failed to fetch posts:", err);
     } finally {
@@ -56,10 +61,9 @@ export function PostList({ filters, refreshKey }: PostListProps) {
   }, [fetchPosts]);
 
   function handlePostUpdate(updated: Post) {
-    setPosts((prev) =>
-      prev.map((p) => (p.id === updated.id ? { ...p, ...updated } : p))
-    );
     setSelectedPost((prev) => (prev ? { ...prev, ...updated } : null));
+    fetchPosts();
+    onPostUpdate?.();
   }
 
   if (loading && posts.length === 0) {
@@ -95,6 +99,7 @@ export function PostList({ filters, refreshKey }: PostListProps) {
           <PostCard
             key={post.id}
             post={post}
+            profileKeywords={profileKeywords}
             onClick={() => setSelectedPost(post)}
           />
         ))}
@@ -127,6 +132,7 @@ export function PostList({ filters, refreshKey }: PostListProps) {
       {selectedPost && (
         <PostDetail
           post={selectedPost}
+          profileKeywords={profileKeywords}
           onUpdate={handlePostUpdate}
           onClose={() => setSelectedPost(null)}
         />

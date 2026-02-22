@@ -31,4 +31,18 @@ export function migrate() {
     CREATE INDEX IF NOT EXISTS idx_posts_status ON posts(status);
     CREATE INDEX IF NOT EXISTS idx_posts_is_remote ON posts(is_remote);
   `);
+
+  // Add dismiss_reason column if it doesn't exist
+  const cols = db.prepare("PRAGMA table_info(posts)").all() as { name: string }[];
+  if (!cols.some((c) => c.name === "dismiss_reason")) {
+    db.exec("ALTER TABLE posts ADD COLUMN dismiss_reason TEXT");
+  }
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS profile_keywords (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      keyword TEXT NOT NULL UNIQUE COLLATE NOCASE,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+  `);
 }

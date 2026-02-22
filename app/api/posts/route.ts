@@ -10,9 +10,12 @@ export async function GET(request: NextRequest) {
   const remote = params.get("remote");
   const search = params.get("search");
   const threadId = params.get("thread_id");
+  const matchKeywords = params.get("match_keywords");
   const page = Math.max(1, Number(params.get("page") || 1));
   const limit = Math.min(100, Math.max(1, Number(params.get("limit") || 50)));
   const offset = (page - 1) * limit;
+
+  const db = getDb();
 
   const conditions: string[] = [];
   const values: any[] = [];
@@ -37,9 +40,20 @@ export async function GET(request: NextRequest) {
     values.push(term, term);
   }
 
-  const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+  // Filter by profile keywords
+  const profileKeywords = (
+    db.prepare("SELECT keyword FROM profile_keywords ORDER BY keyword").all() as { keyword: string }[]
+  ).map((r) => r.keyword);
 
-  const db = getDb();
+  if (matchKeywords === "1" && profileKeywords.length > 0) {
+    const kwConditions = profileKeywords.map(() => "p.content LIKE ?");
+    conditions.push(`(${kwConditions.join(" OR ")})`);
+    for (const kw of profileKeywords) {
+      values.push(`%${kw}%`);
+    }
+  }
+
+  const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
   const countRow = db
     .prepare(`SELECT COUNT(*) as count FROM posts p ${where}`)
@@ -51,7 +65,15 @@ export async function GET(request: NextRequest) {
        FROM posts p
        JOIN threads t ON t.id = p.thread_id
        ${where}
-       ORDER BY p.posted_at DESC
+       ORDER BY CASE p.status
+         WHEN 'new' THEN 0
+         WHEN 'saved' THEN 1
+         WHEN 'applied' THEN 2
+         WHEN 'in_progress' THEN 3
+         WHEN 'dismissed' THEN 4
+         ELSE 5
+       END,
+       p.posted_at DESC
        LIMIT ? OFFSET ?`
     )
     .all(...values, limit, offset);
@@ -61,5 +83,6 @@ export async function GET(request: NextRequest) {
     total: countRow.count,
     page,
     totalPages: Math.ceil(countRow.count / limit),
+    profileKeywords,
   });
 }

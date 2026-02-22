@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { PostStatus, Thread } from "@/lib/types";
+import type { Thread } from "@/lib/types";
+import { KeywordManager } from "./keyword-manager";
 
 const STATUS_TABS: { value: string; label: string }[] = [
   { value: "all", label: "All" },
@@ -17,6 +18,7 @@ interface Filters {
   remote: boolean;
   search: string;
   threadId: string;
+  matchKeywords: boolean;
 }
 
 interface FilterBarProps {
@@ -29,6 +31,7 @@ export function FilterBar({ filters, onChange, refreshKey }: FilterBarProps) {
   const [threads, setThreads] = useState<(Thread & { post_count: number })[]>(
     []
   );
+  const [showKeywordManager, setShowKeywordManager] = useState(false);
 
   useEffect(() => {
     fetch("/api/threads")
@@ -70,6 +73,25 @@ export function FilterBar({ filters, onChange, refreshKey }: FilterBarProps) {
           Remote only
         </label>
 
+        <label className="flex cursor-pointer items-center gap-2 rounded-lg bg-white px-3 py-1.5 text-sm">
+          <input
+            type="checkbox"
+            checked={filters.matchKeywords}
+            onChange={(e) =>
+              onChange({ ...filters, matchKeywords: e.target.checked })
+            }
+            className="rounded border-neutral-300 text-yellow-500 focus:ring-yellow-500"
+          />
+          Matches my skills
+        </label>
+
+        <button
+          onClick={() => setShowKeywordManager(true)}
+          className="rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-sm text-neutral-600 hover:bg-neutral-100"
+        >
+          Manage keywords
+        </button>
+
         <select
           value={filters.threadId}
           onChange={(e) => onChange({ ...filters, threadId: e.target.value })}
@@ -91,6 +113,13 @@ export function FilterBar({ filters, onChange, refreshKey }: FilterBarProps) {
           className="rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
         />
       </div>
+
+      {showKeywordManager && (
+        <KeywordManager
+          onClose={() => setShowKeywordManager(false)}
+          onUpdate={() => onChange({ ...filters })}
+        />
+      )}
     </div>
   );
 }

@@ -24,7 +24,7 @@ export async function PATCH(
   }
 
   const body = await request.json();
-  const { status, notes, applied_at } = body;
+  const { status, notes, applied_at, dismiss_reason } = body;
 
   const db = getDb();
 
@@ -53,6 +53,11 @@ export async function PATCH(
   if (applied_at !== undefined) {
     updates.push("applied_at = ?");
     values.push(applied_at);
+  }
+
+  if (dismiss_reason !== undefined) {
+    updates.push("dismiss_reason = ?");
+    values.push(dismiss_reason);
   }
 
   values.push(postId);
