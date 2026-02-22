@@ -10,18 +10,37 @@ import { DISMISS_REASONS } from "@/lib/types";
 interface PostCardProps {
   post: Post & { month?: string };
   profileKeywords?: string[];
+  selected?: boolean;
+  onSelect?: (id: number, checked: boolean) => void;
   onClick: () => void;
 }
 
-export function PostCard({ post, profileKeywords = [], onClick }: PostCardProps) {
+export function PostCard({ post, profileKeywords = [], selected, onSelect, onClick }: PostCardProps) {
   const preview = stripHtml(post.content).slice(0, 200);
 
   return (
     <button
       onClick={onClick}
-      className="block w-full rounded-lg border border-neutral-200 bg-white p-4 text-left transition-shadow hover:shadow-md"
+      className={`block w-full rounded-lg border bg-white p-4 text-left transition-shadow hover:shadow-md ${
+        selected
+          ? "border-blue-400 bg-blue-50/40 ring-1 ring-blue-200"
+          : "border-neutral-200"
+      }`}
     >
       <div className="flex items-start justify-between gap-3">
+        {onSelect !== undefined && (
+          <label
+            className="flex shrink-0 items-center pt-0.5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <input
+              type="checkbox"
+              checked={selected ?? false}
+              onChange={(e) => onSelect(post.id, e.target.checked)}
+              className="h-4 w-4 rounded border-neutral-300 text-blue-600 focus:ring-blue-500"
+            />
+          </label>
+        )}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <h3 className="truncate text-sm font-semibold text-neutral-900">
