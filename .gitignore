@@ -24,3 +24,5 @@ next-env.d.ts
 
 # SQLite database
 db/data.db
+db/data.db-shm
+db/data.db-wal
