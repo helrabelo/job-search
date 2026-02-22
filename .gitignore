@@ -26,3 +26,7 @@ next-env.d.ts
 db/data.db
 db/data.db-shm
 db/data.db-wal
+
+# personal files
+cover-letter.md
+betterdb-*
