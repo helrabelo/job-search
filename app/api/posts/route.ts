@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
        FROM posts p
        JOIN threads t ON t.id = p.thread_id
        ${where}
-       ORDER BY CASE p.status
+       ORDER BY ${status === "applied" ? "p.applied_at DESC" : `CASE p.status
          WHEN 'new' THEN 0
          WHEN 'saved' THEN 1
          WHEN 'applied' THEN 2
@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
          WHEN 'dismissed' THEN 4
          ELSE 5
        END,
-       p.posted_at DESC
+       p.posted_at DESC`}
        LIMIT ? OFFSET ?`
     )
     .all(...values, limit, offset);
