@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { StatusSelect } from "./status-select";
+import { ApplyEmailForm } from "./apply-email-form";
 import { highlightHtmlContent } from "@/lib/highlight";
 import { timeAgo } from "@/lib/time";
 import type { DismissReason, Post, PostStatus } from "@/lib/types";
@@ -34,6 +35,7 @@ export function PostDetail({ post, profileKeywords = [], onUpdate, onClose }: Po
   const [dismissSuggestions, setDismissSuggestions] = useState<
     { reason: string; count: number; matchedKeywords: string[] }[]
   >([]);
+  const [showEmailForm, setShowEmailForm] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -188,6 +190,12 @@ export function PostDetail({ post, profileKeywords = [], onUpdate, onClose }: Po
               >
                 Applied
               </button>
+              <button
+                onClick={() => setShowEmailForm(!showEmailForm)}
+                className="rounded-lg border border-green-300 px-3 py-2 text-sm text-green-700 hover:bg-green-50"
+              >
+                Apply via Email
+              </button>
               <div className="h-5 w-px bg-neutral-300" />
               <div className="flex flex-wrap gap-1.5">
                 {DISMISS_OPTIONS.map((r) => (
@@ -203,6 +211,19 @@ export function PostDetail({ post, profileKeywords = [], onUpdate, onClose }: Po
               </div>
             </div>
           </div>
+        )}
+
+        {/* Apply via Email form */}
+        {showEmailForm && isUndecided && (
+          <ApplyEmailForm
+            post={post}
+            onSent={(updated) => {
+              setShowEmailForm(false);
+              setStatus("applied");
+              onUpdate(updated);
+            }}
+            onCancel={() => setShowEmailForm(false)}
+          />
         )}
 
         {/* Already-decided banner */}
