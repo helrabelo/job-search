@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/db";
-import { migrate } from "@/db/migrate";
 import type { PostStatus } from "@/lib/types";
 
 const VALID_STATUSES: PostStatus[] = [
@@ -15,8 +14,6 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  migrate();
-
   const { id } = await params;
   const postId = Number(id);
   if (isNaN(postId)) {

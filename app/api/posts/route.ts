@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/db";
-import { migrate } from "@/db/migrate";
 
 export async function GET(request: NextRequest) {
-  migrate();
-
   const params = request.nextUrl.searchParams;
   const status = params.get("status");
   const remote = params.get("remote");

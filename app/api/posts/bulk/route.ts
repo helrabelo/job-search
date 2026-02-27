@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/db";
-import { migrate } from "@/db/migrate";
 import type { PostStatus } from "@/lib/types";
 
 const VALID_STATUSES: PostStatus[] = [
@@ -12,7 +11,6 @@ const VALID_STATUSES: PostStatus[] = [
 ];
 
 export async function PATCH(request: NextRequest) {
-  migrate();
 
   const body = await request.json();
   const { ids, status, dismiss_reason } = body;

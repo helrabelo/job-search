@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/db";
-import { migrate } from "@/db/migrate";
 
 export async function POST(request: NextRequest) {
-  migrate();
-
   const { undo_ids } = await request.json();
 
   if (!Array.isArray(undo_ids) || undo_ids.length === 0) {

@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/db";
-import { migrate } from "@/db/migrate";
 
 export async function GET() {
-  migrate();
   const db = getDb();
   const keywords = db
     .prepare("SELECT * FROM profile_keywords ORDER BY keyword")
@@ -12,7 +10,6 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  migrate();
   const { keyword } = await request.json();
 
   if (!keyword || typeof keyword !== "string" || !keyword.trim()) {

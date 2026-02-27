@@ -1,7 +1,6 @@
 import { getDb } from "@/db";
-import { migrate } from "@/db/migrate";
 import { parseCompany, isRemote, extractMonth } from "./parser";
-import type { AlgoliaHit, HNItem, ScrapeResult } from "./types";
+import type { AlgoliaHit, HNItem, ScrapeResult, ThreadResult } from "./types";
 
 const ALGOLIA_URL =
   "https://hn.algolia.com/api/v1/search_by_date?tags=story,author_whoishiring&query=who+is+hiring&hitsPerPage=10";
@@ -58,16 +57,15 @@ async function fetchItems(ids: number[]): Promise<HNItem[]> {
  * Main scrape function. Finds recent threads, fetches new comments, stores them.
  */
 export async function scrape(): Promise<ScrapeResult> {
-  migrate();
-
   const db = getDb();
   const threads = await findThreads(2);
 
   if (threads.length === 0) {
-    return { newPosts: 0, totalPosts: 0, threadsChecked: 0 };
+    return { newPosts: 0, totalPosts: 0, threadsChecked: 0, threads: [] };
   }
 
   let totalNew = 0;
+  const threadResults: ThreadResult[] = [];
 
   // Prepare statements
   const upsertThread = db.prepare(`
@@ -99,19 +97,50 @@ export async function scrape(): Promise<ScrapeResult> {
       `${HN_ITEM_URL}/${threadId}.json`
     );
 
-    if (!hnThread.kids || hnThread.kids.length === 0) continue;
+    const totalComments = hnThread.kids?.length ?? 0;
+    const alreadyStored = hnThread.kids
+      ? hnThread.kids.filter((id) => existingPostIds.has(id)).length
+      : 0;
+
+    if (!hnThread.kids || hnThread.kids.length === 0) {
+      threadResults.push({
+        title: thread.title,
+        month,
+        totalComments: 0,
+        alreadyStored: 0,
+        newAdded: 0,
+        skippedDeleted: 0,
+      });
+      continue;
+    }
 
     // Filter to only new comment IDs
     const newIds = hnThread.kids.filter((id) => !existingPostIds.has(id));
 
-    if (newIds.length === 0) continue;
+    if (newIds.length === 0) {
+      threadResults.push({
+        title: thread.title,
+        month,
+        totalComments,
+        alreadyStored,
+        newAdded: 0,
+        skippedDeleted: totalComments - alreadyStored,
+      });
+      continue;
+    }
 
     // Fetch new comments
     const comments = await fetchItems(newIds);
 
+    let threadNew = 0;
+    let threadSkipped = 0;
+
     const insertMany = db.transaction(() => {
       for (const comment of comments) {
-        if (!comment.text || comment.deleted || comment.dead) continue;
+        if (!comment.text || comment.deleted || comment.dead) {
+          threadSkipped++;
+          continue;
+        }
 
         const company = parseCompany(comment.text);
         const remote = isRemote(comment.text) ? 1 : 0;
@@ -126,11 +155,24 @@ export async function scrape(): Promise<ScrapeResult> {
           remote,
           postedAt
         );
+        threadNew++;
         totalNew++;
       }
     });
 
     insertMany();
+
+    // Count items that failed to fetch as skipped too
+    const fetchFailures = newIds.length - comments.length;
+
+    threadResults.push({
+      title: thread.title,
+      month,
+      totalComments,
+      alreadyStored,
+      newAdded: threadNew,
+      skippedDeleted: threadSkipped + fetchFailures,
+    });
   }
 
   const totalPosts = (
@@ -141,5 +183,6 @@ export async function scrape(): Promise<ScrapeResult> {
     newPosts: totalNew,
     totalPosts,
     threadsChecked: threads.length,
+    threads: threadResults,
   };
 }

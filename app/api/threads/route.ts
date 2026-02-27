@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/db";
-import { migrate } from "@/db/migrate";
 
 export async function GET() {
-  migrate();
-
   const db = getDb();
   const threads = db
     .prepare(

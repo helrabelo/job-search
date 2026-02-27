@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/db";
-import { migrate } from "@/db/migrate";
 
 export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  migrate();
   const { id } = await params;
   const keywordId = Number(id);
   if (isNaN(keywordId)) {

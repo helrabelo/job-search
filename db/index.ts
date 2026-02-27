@@ -10,6 +10,11 @@ export function getDb(): Database.Database {
     _db = new Database(DB_PATH);
     _db.pragma("journal_mode = WAL");
     _db.pragma("foreign_keys = ON");
+
+    // Run migrations on first connection
+    // Inline require to avoid circular dependency
+    const { migrate } = require("./migrate");
+    migrate();
   }
   return _db;
 }
