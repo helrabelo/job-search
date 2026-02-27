@@ -42,14 +42,25 @@ export interface Post {
   notes: string | null;
   applied_at: string | null;
   dismiss_reason: string | null;
+  first_seen_at: string | null;
   updated_at: string;
   created_at: string;
+}
+
+export interface ThreadResult {
+  title: string;
+  month: string;
+  totalComments: number;
+  alreadyStored: number;
+  newAdded: number;
+  skippedDeleted: number;
 }
 
 export interface ScrapeResult {
   newPosts: number;
   totalPosts: number;
   threadsChecked: number;
+  threads: ThreadResult[];
 }
 
 export interface AlgoliaHit {

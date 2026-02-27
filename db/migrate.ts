@@ -68,6 +68,19 @@ const migrations: Migration[] = [
       CREATE INDEX IF NOT EXISTS idx_undo_log_post_id ON undo_log(post_id);
     `,
   },
+  {
+    version: 4,
+    name: "add_scrape_log_and_first_seen",
+    up: `
+      CREATE TABLE IF NOT EXISTS scrape_log (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        thread_id INTEGER NOT NULL,
+        scraped_at TEXT NOT NULL DEFAULT (datetime('now')),
+        new_post_count INTEGER NOT NULL DEFAULT 0
+      );
+      ALTER TABLE posts ADD COLUMN first_seen_at TEXT;
+    `,
+  },
 ];
 
 let migrated = false;
@@ -111,6 +124,11 @@ export function migrate() {
       // Check if undo_log table exists
       if (tableNames.has("undo_log")) {
         db.prepare("INSERT OR IGNORE INTO schema_version (version, name) VALUES (?, ?)").run(3, "add_undo_log");
+      }
+
+      // Check if first_seen_at column and scrape_log exist
+      if (cols.some((c) => c.name === "first_seen_at") && tableNames.has("scrape_log")) {
+        db.prepare("INSERT OR IGNORE INTO schema_version (version, name) VALUES (?, ?)").run(4, "add_scrape_log_and_first_seen");
       }
     }
   }

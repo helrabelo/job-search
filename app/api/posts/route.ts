@@ -42,6 +42,12 @@ export async function GET(request: NextRequest) {
     db.prepare("SELECT keyword FROM profile_keywords ORDER BY keyword").all() as { keyword: string }[]
   ).map((r) => r.keyword);
 
+  const newSince = params.get("new_since");
+  if (newSince) {
+    conditions.push("p.first_seen_at > ?");
+    values.push(newSince);
+  }
+
   if (matchKeywords === "1" && profileKeywords.length > 0) {
     const kwConditions = profileKeywords.map(() => "p.content LIKE ?");
     conditions.push(`(${kwConditions.join(" OR ")})`);

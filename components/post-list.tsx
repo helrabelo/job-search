@@ -17,9 +17,10 @@ interface PostListProps {
     threadId: string;
     matchKeywords: boolean;
   };
+  lastSeenAt?: string | null;
 }
 
-export function PostList({ filters }: PostListProps) {
+export function PostList({ filters, lastSeenAt }: PostListProps) {
   const { mutate } = useData();
   const { toast } = useToast();
   const { posts, total, page, totalPages, loading, profileKeywords, setPage, refetch } = usePosts(filters);
@@ -181,6 +182,7 @@ export function PostList({ filters }: PostListProps) {
             post={post}
             profileKeywords={profileKeywords}
             selected={selectedIds.has(post.id)}
+            isNew={!!lastSeenAt && !!post.first_seen_at && post.first_seen_at > lastSeenAt}
             onSelect={handleSelect}
             onClick={() => setSelectedPost(post)}
           />

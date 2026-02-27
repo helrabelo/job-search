@@ -1,11 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DataProvider } from "@/components/data-provider";
 import { RefreshButton } from "@/components/refresh-button";
 import { FilterBar } from "@/components/filter-bar";
 import { PostList } from "@/components/post-list";
 import { StatsSidebar } from "@/components/stats-sidebar";
+
+const LAST_SEEN_KEY = "hn-tracker-last-seen";
+
+function getLastSeen(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(LAST_SEEN_KEY);
+}
+
+function updateLastSeen() {
+  localStorage.setItem(LAST_SEEN_KEY, new Date().toISOString());
+}
 
 function DashboardContent() {
   const [filters, setFilters] = useState({
@@ -15,6 +26,14 @@ function DashboardContent() {
     threadId: "",
     matchKeywords: false,
   });
+  const [lastSeenAt, setLastSeenAt] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLastSeenAt(getLastSeen());
+    // Update last seen after a brief delay so badges show on this visit
+    const timer = setTimeout(updateLastSeen, 3000);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
@@ -38,7 +57,7 @@ function DashboardContent() {
           <div className="mb-6">
             <FilterBar filters={filters} onChange={setFilters} />
           </div>
-          <PostList filters={filters} />
+          <PostList filters={filters} lastSeenAt={lastSeenAt} />
         </div>
 
         {/* Sidebar - hidden on small screens */}

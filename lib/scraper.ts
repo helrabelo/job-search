@@ -75,8 +75,8 @@ export async function scrape(): Promise<ScrapeResult> {
   `);
 
   const insertPost = db.prepare(`
-    INSERT OR IGNORE INTO posts (id, thread_id, author, content, company, is_remote, posted_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    INSERT OR IGNORE INTO posts (id, thread_id, author, content, company, is_remote, posted_at, first_seen_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
   `);
 
   const existingPostIds = new Set(
@@ -161,6 +161,11 @@ export async function scrape(): Promise<ScrapeResult> {
     });
 
     insertMany();
+
+    // Log scrape event
+    db.prepare(
+      "INSERT INTO scrape_log (thread_id, new_post_count) VALUES (?, ?)"
+    ).run(threadId, threadNew);
 
     // Count items that failed to fetch as skipped too
     const fetchFailures = newIds.length - comments.length;

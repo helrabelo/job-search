@@ -11,11 +11,12 @@ interface PostCardProps {
   post: Post & { month?: string };
   profileKeywords?: string[];
   selected?: boolean;
+  isNew?: boolean;
   onSelect?: (id: number, checked: boolean) => void;
   onClick: () => void;
 }
 
-export function PostCard({ post, profileKeywords = [], selected, onSelect, onClick }: PostCardProps) {
+export function PostCard({ post, profileKeywords = [], selected, isNew, onSelect, onClick }: PostCardProps) {
   const preview = stripHtml(post.content).slice(0, 200);
 
   return (
@@ -46,6 +47,11 @@ export function PostCard({ post, profileKeywords = [], selected, onSelect, onCli
             <h3 className="truncate text-sm font-semibold text-neutral-900">
               {post.company ?? "Unknown Company"}
             </h3>
+            {isNew && (
+              <span className="shrink-0 rounded bg-blue-500 px-1.5 py-0.5 text-[10px] font-bold uppercase text-white">
+                New
+              </span>
+            )}
             <span className="shrink-0 text-[11px] text-neutral-400">
               {timeAgo(post.posted_at)}
             </span>
