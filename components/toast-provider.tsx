@@ -4,6 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useState,
   type ReactNode,
 } from "react";
@@ -103,6 +104,11 @@ function ToastMessage({
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const dismiss = useCallback((id: number) => {
     setToasts((prev) =>
@@ -135,22 +141,18 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     [dismiss]
   );
 
-  const portal =
-    typeof window !== "undefined"
-      ? createPortal(
+  return (
+    <ToastContext.Provider value={{ toast }}>
+      {children}
+      {mounted &&
+        createPortal(
           <div className="pointer-events-none fixed bottom-4 right-4 z-[100] flex flex-col gap-2">
             {toasts.map((t) => (
               <ToastMessage key={t.id} item={t} onDismiss={() => dismiss(t.id)} />
             ))}
           </div>,
           document.body
-        )
-      : null;
-
-  return (
-    <ToastContext.Provider value={{ toast }}>
-      {children}
-      {portal}
+        )}
     </ToastContext.Provider>
   );
 }
