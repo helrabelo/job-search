@@ -46,8 +46,11 @@ export async function runScrapers(sourceName?: string): Promise<MultiScrapeResul
   `);
 
   const insertPost = db.prepare(`
-    INSERT OR IGNORE INTO posts (id, thread_id, author, content, company, is_remote, posted_at, first_seen_at, relevance_score, source, apply_url)
+    INSERT INTO posts (id, thread_id, author, content, company, is_remote, posted_at, first_seen_at, relevance_score, source, apply_url)
     VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), ?, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET
+      content = CASE WHEN excluded.content != '' AND length(excluded.content) > length(posts.content) THEN excluded.content ELSE posts.content END,
+      apply_url = CASE WHEN posts.apply_url IS NULL THEN excluded.apply_url ELSE posts.apply_url END
   `);
 
   let totalNew = 0;
@@ -75,8 +78,7 @@ export async function runScrapers(sourceName?: string): Promise<MultiScrapeResul
         const postId = /^\d+$/.test(post.id) ? Number(post.id) : hashStringId(post.id);
         const threadId = /^\d+$/.test(post.thread_id) ? Number(post.thread_id) : hashStringId(post.thread_id);
 
-        if (existingPostIds.has(postId) || existingStringIds.has(String(postId))) continue;
-
+        const isNew = !existingPostIds.has(postId) && !existingStringIds.has(String(postId));
         const score = calculateScore(post.content, profileKeywords, post.is_remote);
         insertPost.run(
           postId,
@@ -90,9 +92,11 @@ export async function runScrapers(sourceName?: string): Promise<MultiScrapeResul
           post.source,
           post.apply_url ?? null
         );
-        sourceNew++;
-        totalNew++;
-        existingPostIds.add(postId);
+        if (isNew) {
+          sourceNew++;
+          totalNew++;
+          existingPostIds.add(postId);
+        }
       }
 
       // Log scrape events
