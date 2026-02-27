@@ -1,21 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useStats } from "@/lib/hooks/use-stats";
 import { DISMISS_REASONS } from "@/lib/types";
-
-interface StatsData {
-  statusBreakdown: { status: string; count: number }[];
-  dismissBreakdown: { dismiss_reason: string; count: number }[];
-  timeline: { month: string; total: number; applied: number }[];
-  keywords: { keyword: string; count: number }[];
-  activity: {
-    reviewedThisWeek: number;
-    appliedThisWeek: number;
-    lastAppliedAt: string | null;
-  };
-  remoteBreakdown: { is_remote: number; count: number }[];
-}
 
 const STATUS_COLORS: Record<string, string> = {
   new: "bg-blue-500",
@@ -174,15 +161,16 @@ function formatRelativeDate(dateStr: string): string {
   return `${Math.floor(diffDays / 30)}mo ago`;
 }
 
-export function StatsSidebar({ refreshKey }: { refreshKey: number }) {
-  const [data, setData] = useState<StatsData | null>(null);
+interface SidebarFilters {
+  status: string;
+  remote: boolean;
+  search: string;
+  threadId: string;
+  matchKeywords: boolean;
+}
 
-  useEffect(() => {
-    fetch("/api/stats")
-      .then((r) => r.json())
-      .then(setData)
-      .catch(console.error);
-  }, [refreshKey]);
+export function StatsSidebar({ filters }: { filters: SidebarFilters }) {
+  const data = useStats(filters);
 
   if (!data) {
     return (

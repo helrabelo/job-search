@@ -1,8 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { PostCard } from "./post-card";
 import { PostDetail } from "./post-detail";
+import { useData } from "@/components/data-provider";
+import { useToast } from "@/components/toast-provider";
+import { usePosts } from "@/lib/hooks/use-posts";
 import type { Post } from "@/lib/types";
 import { DISMISS_REASONS } from "@/lib/types";
 
@@ -14,64 +17,27 @@ interface PostListProps {
     threadId: string;
     matchKeywords: boolean;
   };
-  refreshKey: number;
-  onPostUpdate?: () => void;
 }
 
-export function PostList({ filters, refreshKey, onPostUpdate }: PostListProps) {
-  const [posts, setPosts] = useState<(Post & { month?: string })[]>([]);
-  const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const [profileKeywords, setProfileKeywords] = useState<string[]>([]);
+export function PostList({ filters }: PostListProps) {
+  const { mutate } = useData();
+  const { toast } = useToast();
+  const { posts, total, page, totalPages, loading, profileKeywords, setPage, refetch } = usePosts(filters);
   const [selectedPost, setSelectedPost] = useState<
-    (Post & { month?: string }) | null
+    (Post & { month?: string; thread_title?: string }) | null
   >(null);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [bulkLoading, setBulkLoading] = useState(false);
-
-  const fetchPosts = useCallback(async () => {
-    setLoading(true);
-    const params = new URLSearchParams();
-    if (filters.status !== "all") params.set("status", filters.status);
-    if (filters.remote) params.set("remote", "1");
-    if (filters.search) params.set("search", filters.search);
-    if (filters.threadId) params.set("thread_id", filters.threadId);
-    if (filters.matchKeywords) params.set("match_keywords", "1");
-    params.set("page", String(page));
-
-    try {
-      const res = await fetch(`/api/posts?${params}`);
-      const data = await res.json();
-      setPosts(data.posts);
-      setTotal(data.total);
-      setTotalPages(data.totalPages);
-      setProfileKeywords(data.profileKeywords ?? []);
-    } catch (err) {
-      console.error("Failed to fetch posts:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [filters, page, refreshKey]);
 
   // Clear selection on filter or page change
   useEffect(() => {
     setSelectedIds(new Set());
   }, [filters, page]);
 
-  useEffect(() => {
-    setPage(1);
-  }, [filters]);
-
-  useEffect(() => {
-    fetchPosts();
-  }, [fetchPosts]);
-
   function handlePostUpdate(updated: Post) {
     setSelectedPost((prev) => (prev ? { ...prev, ...updated } : null));
-    fetchPosts();
-    onPostUpdate?.();
+    refetch();
+    mutate();
   }
 
   function handleSelect(id: number, checked: boolean) {
@@ -97,8 +63,9 @@ export function PostList({ filters, refreshKey, onPostUpdate }: PostListProps) {
   async function handleBulkDismiss(reason: string) {
     if (selectedIds.size === 0) return;
     setBulkLoading(true);
+    const count = selectedIds.size;
     try {
-      await fetch("/api/posts/bulk", {
+      const res = await fetch("/api/posts/bulk", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -107,11 +74,32 @@ export function PostList({ filters, refreshKey, onPostUpdate }: PostListProps) {
           dismiss_reason: reason,
         }),
       });
+      const data = await res.json();
+      const undoIds = data.undo_ids ?? [];
       setSelectedIds(new Set());
-      fetchPosts();
-      onPostUpdate?.();
+      refetch();
+      mutate();
+      toast(`Dismissed ${count} post${count !== 1 ? "s" : ""}`, {
+        type: "success",
+        action: undoIds.length > 0
+          ? {
+              label: "Undo",
+              onClick: async () => {
+                await fetch("/api/undo", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ undo_ids: undoIds }),
+                });
+                refetch();
+                mutate();
+                toast("Restored", { type: "info" });
+              },
+            }
+          : undefined,
+      });
     } catch (err) {
       console.error("Bulk dismiss failed:", err);
+      toast("Bulk dismiss failed", { type: "error" });
     } finally {
       setBulkLoading(false);
     }
@@ -203,7 +191,7 @@ export function PostList({ filters, refreshKey, onPostUpdate }: PostListProps) {
       {totalPages > 1 && (
         <div className="mt-4 flex items-center justify-center gap-2">
           <button
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            onClick={() => setPage(Math.max(1, page - 1))}
             disabled={page === 1}
             className="rounded-lg border border-neutral-200 px-3 py-1.5 text-sm disabled:opacity-30"
           >
@@ -213,7 +201,7 @@ export function PostList({ filters, refreshKey, onPostUpdate }: PostListProps) {
             Page {page} of {totalPages}
           </span>
           <button
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            onClick={() => setPage(Math.min(totalPages, page + 1))}
             disabled={page === totalPages}
             className="rounded-lg border border-neutral-200 px-3 py-1.5 text-sm disabled:opacity-30"
           >

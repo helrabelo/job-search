@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { DataProvider } from "@/components/data-provider";
 import { RefreshButton } from "@/components/refresh-button";
 import { FilterBar } from "@/components/filter-bar";
 import { PostList } from "@/components/post-list";
 import { StatsSidebar } from "@/components/stats-sidebar";
 
-export default function Dashboard() {
-  const [refreshKey, setRefreshKey] = useState(0);
+function DashboardContent() {
   const [filters, setFilters] = useState({
     status: "all",
     remote: false,
@@ -28,9 +28,7 @@ export default function Dashboard() {
             Browse &quot;Who is Hiring&quot; posts from Hacker News
           </p>
         </div>
-        <RefreshButton
-          onComplete={() => setRefreshKey((k) => k + 1)}
-        />
+        <RefreshButton />
       </div>
 
       {/* Two-column layout */}
@@ -38,26 +36,26 @@ export default function Dashboard() {
         {/* Main content */}
         <div className="min-w-0 flex-1">
           <div className="mb-6">
-            <FilterBar
-              filters={filters}
-              onChange={setFilters}
-              refreshKey={refreshKey}
-            />
+            <FilterBar filters={filters} onChange={setFilters} />
           </div>
-          <PostList
-            filters={filters}
-            refreshKey={refreshKey}
-            onPostUpdate={() => setRefreshKey((k) => k + 1)}
-          />
+          <PostList filters={filters} />
         </div>
 
         {/* Sidebar - hidden on small screens */}
         <aside className="hidden w-72 shrink-0 lg:block">
           <div className="sticky top-8">
-            <StatsSidebar refreshKey={refreshKey} />
+            <StatsSidebar filters={filters} />
           </div>
         </aside>
       </div>
     </div>
+  );
+}
+
+export default function Dashboard() {
+  return (
+    <DataProvider>
+      <DashboardContent />
+    </DataProvider>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import type { Thread } from "@/lib/types";
+import { useState } from "react";
+import { useThreads } from "@/lib/hooks/use-threads";
 import { KeywordManager } from "./keyword-manager";
 
 const STATUS_TABS: { value: string; label: string }[] = [
@@ -24,21 +24,11 @@ interface Filters {
 interface FilterBarProps {
   filters: Filters;
   onChange: (filters: Filters) => void;
-  refreshKey: number;
 }
 
-export function FilterBar({ filters, onChange, refreshKey }: FilterBarProps) {
-  const [threads, setThreads] = useState<(Thread & { post_count: number })[]>(
-    []
-  );
+export function FilterBar({ filters, onChange }: FilterBarProps) {
+  const threads = useThreads();
   const [showKeywordManager, setShowKeywordManager] = useState(false);
-
-  useEffect(() => {
-    fetch("/api/threads")
-      .then((r) => r.json())
-      .then(setThreads)
-      .catch(console.error);
-  }, [refreshKey]);
 
   return (
     <div className="space-y-3">

@@ -1,9 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useData } from "@/components/data-provider";
+import { useToast } from "@/components/toast-provider";
 import type { ScrapeResult } from "@/lib/types";
 
-export function RefreshButton({ onComplete }: { onComplete: () => void }) {
+export function RefreshButton() {
+  const { mutate } = useData();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ScrapeResult | null>(null);
 
@@ -15,9 +19,15 @@ export function RefreshButton({ onComplete }: { onComplete: () => void }) {
       if (!res.ok) throw new Error("Scrape failed");
       const data: ScrapeResult = await res.json();
       setResult(data);
-      onComplete();
+      mutate();
+      if (data.newPosts > 0) {
+        toast(`Found ${data.newPosts} new post${data.newPosts !== 1 ? "s" : ""}`, { type: "success" });
+      } else {
+        toast("All caught up — no new posts", { type: "info" });
+      }
     } catch (err) {
       console.error(err);
+      toast("Scrape failed", { type: "error" });
     } finally {
       setLoading(false);
     }
@@ -73,10 +83,23 @@ export function RefreshButton({ onComplete }: { onComplete: () => void }) {
         )}
       </button>
       {result && (
-        <span className="text-sm text-neutral-600">
-          Found {result.newPosts} new post{result.newPosts !== 1 && "s"} across{" "}
-          {result.threadsChecked} thread{result.threadsChecked !== 1 && "s"}
-        </span>
+        <div className="flex flex-col gap-1 text-sm text-neutral-600">
+          {result.newPosts > 0 ? (
+            <span className="font-medium text-green-600">
+              +{result.newPosts} new post{result.newPosts !== 1 && "s"}
+            </span>
+          ) : (
+            <span>All caught up — no new posts</span>
+          )}
+          {result.threads?.map((t) => (
+            <span key={t.month} className="text-xs text-neutral-400">
+              {t.month}: {t.alreadyStored} stored / {t.totalComments} on HN
+              {t.skippedDeleted > 0 &&
+                ` (${t.skippedDeleted} deleted/dead)`}
+              {t.newAdded > 0 && ` (+${t.newAdded} new)`}
+            </span>
+          ))}
+        </div>
       )}
     </div>
   );
