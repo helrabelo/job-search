@@ -26,6 +26,7 @@ function DashboardContent() {
     threadId: string;
     matchKeywords: boolean;
     sort?: string;
+    source?: string;
   }>({
     status: "all",
     remote: false,

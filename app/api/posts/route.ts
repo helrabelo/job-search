@@ -37,6 +37,12 @@ export async function GET(request: NextRequest) {
     values.push(term, term);
   }
 
+  const source = params.get("source");
+  if (source) {
+    conditions.push("p.source = ?");
+    values.push(source);
+  }
+
   // Filter by profile keywords
   const profileKeywords = (
     db.prepare("SELECT keyword FROM profile_keywords ORDER BY keyword").all() as { keyword: string }[]

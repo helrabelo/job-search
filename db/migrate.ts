@@ -118,6 +118,14 @@ const migrations: Migration[] = [
       );
     `,
   },
+  {
+    version: 8,
+    name: "add_source_columns",
+    up: `
+      ALTER TABLE threads ADD COLUMN source TEXT NOT NULL DEFAULT 'hn';
+      ALTER TABLE posts ADD COLUMN source TEXT NOT NULL DEFAULT 'hn';
+    `,
+  },
 ];
 
 let migrated = false;

@@ -1,9 +1,11 @@
-import { NextResponse } from "next/server";
-import { scrape } from "@/lib/scraper";
+import { NextRequest, NextResponse } from "next/server";
+import { runScrapers } from "@/lib/scrapers";
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
-    const result = await scrape();
+    const body = await request.json().catch(() => ({}));
+    const source = body.source as string | undefined;
+    const result = await runScrapers(source);
     return NextResponse.json(result);
   } catch (error) {
     console.error("Scrape error:", error);

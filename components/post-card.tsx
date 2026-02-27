@@ -78,6 +78,11 @@ export function PostCard({ post, profileKeywords = [], selected, isNew, onSelect
                 {post.relevance_score}
               </span>
             )}
+            {post.source && post.source !== "hn" && (
+              <span className="shrink-0 rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-medium text-indigo-600">
+                {post.source === "remoteok" ? "RemoteOK" : post.source === "weworkremotely" ? "WWR" : post.source}
+              </span>
+            )}
             {post.is_remote === 1 && (
               <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
                 Remote

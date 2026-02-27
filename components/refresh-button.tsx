@@ -91,6 +91,12 @@ export function RefreshButton() {
           ) : (
             <span>All caught up — no new posts</span>
           )}
+          {result.perSource?.map((s) => (
+            <span key={s.source} className="text-xs text-neutral-400">
+              {s.source}: {s.newPosts} new from {s.threads} thread{s.threads !== 1 ? "s" : ""}
+              {s.errors && <span className="text-red-400"> (error: {s.errors})</span>}
+            </span>
+          ))}
           {result.threads?.map((t) => (
             <span key={t.month} className="text-xs text-neutral-400">
               {t.month}: {t.alreadyStored} stored / {t.totalComments} on HN

@@ -11,6 +11,7 @@ interface Filters {
   threadId: string;
   matchKeywords: boolean;
   sort?: string;
+  source?: string;
 }
 
 interface UsePostsResult {
@@ -47,6 +48,7 @@ export function usePosts(filters: Filters): UsePostsResult {
     if (filters.threadId) params.set("thread_id", filters.threadId);
     if (filters.matchKeywords) params.set("match_keywords", "1");
     if (filters.sort) params.set("sort", filters.sort);
+    if (filters.source) params.set("source", filters.source);
     params.set("page", String(page));
 
     try {

@@ -44,6 +44,7 @@ export interface Post {
   dismiss_reason: string | null;
   first_seen_at: string | null;
   relevance_score: number;
+  source: string;
   updated_at: string;
   created_at: string;
 }
@@ -60,8 +61,10 @@ export interface ThreadResult {
 export interface ScrapeResult {
   newPosts: number;
   totalPosts: number;
-  threadsChecked: number;
-  threads: ThreadResult[];
+  threadsChecked?: number;
+  threads?: ThreadResult[];
+  sourcesChecked?: string[];
+  perSource?: { source: string; threads: number; newPosts: number; errors?: string }[];
 }
 
 export interface AlgoliaHit {

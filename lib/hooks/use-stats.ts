@@ -23,6 +23,7 @@ interface Filters {
   threadId: string;
   matchKeywords: boolean;
   sort?: string;
+  source?: string;
 }
 
 export function useStats(filters: Filters) {
@@ -36,6 +37,7 @@ export function useStats(filters: Filters) {
     if (filters.search) params.set("search", filters.search);
     if (filters.threadId) params.set("thread_id", filters.threadId);
     if (filters.matchKeywords) params.set("match_keywords", "1");
+    if (filters.source) params.set("source", filters.source);
 
     fetch(`/api/stats?${params}`)
       .then((r) => r.json())

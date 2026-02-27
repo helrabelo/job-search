@@ -29,6 +29,12 @@ function buildFilterClause(params: URLSearchParams) {
     values.push(term, term);
   }
 
+  const source = params.get("source");
+  if (source) {
+    conditions.push("p.source = ?");
+    values.push(source);
+  }
+
   const db = getDb();
   const matchKeywords = params.get("match_keywords");
   if (matchKeywords === "1") {

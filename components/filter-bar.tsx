@@ -20,6 +20,7 @@ interface Filters {
   threadId: string;
   matchKeywords: boolean;
   sort?: string;
+  source?: string;
 }
 
 interface FilterBarProps {
@@ -94,6 +95,17 @@ export function FilterBar({ filters, onChange }: FilterBarProps) {
               {t.month} ({t.post_count} posts)
             </option>
           ))}
+        </select>
+
+        <select
+          value={filters.source ?? "all"}
+          onChange={(e) => onChange({ ...filters, source: e.target.value === "all" ? undefined : e.target.value })}
+          className="rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+        >
+          <option value="all">All sources</option>
+          <option value="hn">Hacker News</option>
+          <option value="remoteok">RemoteOK</option>
+          <option value="weworkremotely">WeWorkRemotely</option>
         </select>
 
         <select
