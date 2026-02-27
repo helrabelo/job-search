@@ -88,6 +88,22 @@ const migrations: Migration[] = [
       ALTER TABLE posts ADD COLUMN relevance_score INTEGER DEFAULT 0;
     `,
   },
+  {
+    version: 6,
+    name: "add_company_research",
+    up: `
+      CREATE TABLE IF NOT EXISTS company_research (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        post_id INTEGER NOT NULL UNIQUE REFERENCES posts(id),
+        company_name TEXT,
+        company_url TEXT,
+        linkedin_url TEXT,
+        glassdoor_url TEXT,
+        levels_url TEXT,
+        cached_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+    `,
+  },
 ];
 
 let migrated = false;
