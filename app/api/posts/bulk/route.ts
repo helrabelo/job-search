@@ -44,13 +44,38 @@ export async function PATCH(request: NextRequest) {
   }
 
   const placeholders = ids.map(() => "?").join(", ");
-  values.push(...ids);
 
-  const result = db
-    .prepare(
+  // Log undo entries for each post before updating
+  const undoIds: number[] = [];
+  const insertUndo = db.prepare(
+    "INSERT INTO undo_log (post_id, field, old_value, new_value) VALUES (?, ?, ?, ?)"
+  );
+
+  db.transaction(() => {
+    // Expire old undo entries
+    db.prepare("DELETE FROM undo_log WHERE created_at < datetime('now', '-24 hours')").run();
+
+    // Get current values for affected posts
+    const posts = db
+      .prepare(`SELECT id, status, dismiss_reason FROM posts WHERE id IN (${placeholders})`)
+      .all(...ids) as { id: number; status: string; dismiss_reason: string | null }[];
+
+    for (const post of posts) {
+      if (status !== undefined) {
+        const r = insertUndo.run(post.id, "status", post.status, status);
+        undoIds.push(Number(r.lastInsertRowid));
+      }
+      if (dismiss_reason !== undefined) {
+        const r = insertUndo.run(post.id, "dismiss_reason", post.dismiss_reason, dismiss_reason);
+        undoIds.push(Number(r.lastInsertRowid));
+      }
+    }
+
+    const allValues = [...values, ...ids];
+    db.prepare(
       `UPDATE posts SET ${updates.join(", ")} WHERE id IN (${placeholders})`
-    )
-    .run(...values);
+    ).run(...allValues);
+  })();
 
-  return NextResponse.json({ updated: result.changes });
+  return NextResponse.json({ updated: ids.length, undo_ids: undoIds });
 }
