@@ -22,6 +22,7 @@ interface Filters {
   search: string;
   threadId: string;
   matchKeywords: boolean;
+  sort?: string;
 }
 
 export function useStats(filters: Filters) {

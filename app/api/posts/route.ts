@@ -62,21 +62,31 @@ export async function GET(request: NextRequest) {
     .prepare(`SELECT COUNT(*) as count FROM posts p ${where}`)
     .get(...values) as { count: number };
 
+  const sort = params.get("sort");
+  let orderBy: string;
+  if (sort === "relevance") {
+    orderBy = "p.relevance_score DESC, p.posted_at DESC";
+  } else if (status === "applied") {
+    orderBy = "p.applied_at DESC";
+  } else {
+    orderBy = `CASE p.status
+      WHEN 'new' THEN 0
+      WHEN 'saved' THEN 1
+      WHEN 'applied' THEN 2
+      WHEN 'in_progress' THEN 3
+      WHEN 'dismissed' THEN 4
+      ELSE 5
+    END,
+    p.posted_at DESC`;
+  }
+
   const posts = db
     .prepare(
       `SELECT p.*, t.month, t.title as thread_title
        FROM posts p
        JOIN threads t ON t.id = p.thread_id
        ${where}
-       ORDER BY ${status === "applied" ? "p.applied_at DESC" : `CASE p.status
-         WHEN 'new' THEN 0
-         WHEN 'saved' THEN 1
-         WHEN 'applied' THEN 2
-         WHEN 'in_progress' THEN 3
-         WHEN 'dismissed' THEN 4
-         ELSE 5
-       END,
-       p.posted_at DESC`}
+       ORDER BY ${orderBy}
        LIMIT ? OFFSET ?`
     )
     .all(...values, limit, offset);

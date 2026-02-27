@@ -10,6 +10,7 @@ interface Filters {
   search: string;
   threadId: string;
   matchKeywords: boolean;
+  sort?: string;
 }
 
 interface UsePostsResult {
@@ -45,6 +46,7 @@ export function usePosts(filters: Filters): UsePostsResult {
     if (filters.search) params.set("search", filters.search);
     if (filters.threadId) params.set("thread_id", filters.threadId);
     if (filters.matchKeywords) params.set("match_keywords", "1");
+    if (filters.sort) params.set("sort", filters.sort);
     params.set("page", String(page));
 
     try {

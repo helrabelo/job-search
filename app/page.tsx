@@ -19,7 +19,14 @@ function updateLastSeen() {
 }
 
 function DashboardContent() {
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<{
+    status: string;
+    remote: boolean;
+    search: string;
+    threadId: string;
+    matchKeywords: boolean;
+    sort?: string;
+  }>({
     status: "all",
     remote: false,
     search: "",

@@ -19,6 +19,7 @@ interface Filters {
   search: string;
   threadId: string;
   matchKeywords: boolean;
+  sort?: string;
 }
 
 interface FilterBarProps {
@@ -93,6 +94,15 @@ export function FilterBar({ filters, onChange }: FilterBarProps) {
               {t.month} ({t.post_count} posts)
             </option>
           ))}
+        </select>
+
+        <select
+          value={filters.sort ?? "default"}
+          onChange={(e) => onChange({ ...filters, sort: e.target.value === "default" ? undefined : e.target.value })}
+          className="rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+        >
+          <option value="default">Sort: Default</option>
+          <option value="relevance">Sort: Relevance</option>
         </select>
 
         <input

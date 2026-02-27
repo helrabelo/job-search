@@ -1,5 +1,6 @@
 import { getDb } from "@/db";
 import { parseCompany, isRemote, extractMonth } from "./parser";
+import { calculateScore } from "./scoring";
 import type { AlgoliaHit, HNItem, ScrapeResult, ThreadResult } from "./types";
 
 const ALGOLIA_URL =
@@ -75,9 +76,14 @@ export async function scrape(): Promise<ScrapeResult> {
   `);
 
   const insertPost = db.prepare(`
-    INSERT OR IGNORE INTO posts (id, thread_id, author, content, company, is_remote, posted_at, first_seen_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
+    INSERT OR IGNORE INTO posts (id, thread_id, author, content, company, is_remote, posted_at, first_seen_at, relevance_score)
+    VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), ?)
   `);
+
+  // Load profile keywords for scoring
+  const profileKeywords = (
+    db.prepare("SELECT keyword FROM profile_keywords ORDER BY keyword").all() as { keyword: string }[]
+  ).map((r) => r.keyword);
 
   const existingPostIds = new Set(
     db
@@ -145,6 +151,7 @@ export async function scrape(): Promise<ScrapeResult> {
         const company = parseCompany(comment.text);
         const remote = isRemote(comment.text) ? 1 : 0;
         const postedAt = new Date(comment.time * 1000).toISOString();
+        const score = calculateScore(comment.text, profileKeywords, remote === 1);
 
         insertPost.run(
           comment.id,
@@ -153,7 +160,8 @@ export async function scrape(): Promise<ScrapeResult> {
           comment.text,
           company,
           remote,
-          postedAt
+          postedAt,
+          score
         );
         threadNew++;
         totalNew++;

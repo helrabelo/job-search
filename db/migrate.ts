@@ -81,6 +81,13 @@ const migrations: Migration[] = [
       ALTER TABLE posts ADD COLUMN first_seen_at TEXT;
     `,
   },
+  {
+    version: 5,
+    name: "add_relevance_score",
+    up: `
+      ALTER TABLE posts ADD COLUMN relevance_score INTEGER DEFAULT 0;
+    `,
+  },
 ];
 
 let migrated = false;
@@ -129,6 +136,11 @@ export function migrate() {
       // Check if first_seen_at column and scrape_log exist
       if (cols.some((c) => c.name === "first_seen_at") && tableNames.has("scrape_log")) {
         db.prepare("INSERT OR IGNORE INTO schema_version (version, name) VALUES (?, ?)").run(4, "add_scrape_log_and_first_seen");
+      }
+
+      // Check if relevance_score column exists
+      if (cols.some((c) => c.name === "relevance_score")) {
+        db.prepare("INSERT OR IGNORE INTO schema_version (version, name) VALUES (?, ?)").run(5, "add_relevance_score");
       }
     }
   }

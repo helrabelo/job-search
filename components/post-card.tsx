@@ -65,6 +65,19 @@ export function PostCard({ post, profileKeywords = [], selected, isNew, onSelect
 
         <div className="flex shrink-0 flex-col items-end gap-1.5">
           <div className="flex items-center gap-1.5">
+            {post.relevance_score > 0 && (
+              <span
+                className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                  post.relevance_score > 70
+                    ? "bg-green-100 text-green-700"
+                    : post.relevance_score > 40
+                      ? "bg-yellow-100 text-yellow-700"
+                      : "bg-neutral-100 text-neutral-500"
+                }`}
+              >
+                {post.relevance_score}
+              </span>
+            )}
             {post.is_remote === 1 && (
               <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
                 Remote

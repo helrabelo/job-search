@@ -43,6 +43,7 @@ export interface Post {
   applied_at: string | null;
   dismiss_reason: string | null;
   first_seen_at: string | null;
+  relevance_score: number;
   updated_at: string;
   created_at: string;
 }

@@ -16,6 +16,7 @@ interface PostListProps {
     search: string;
     threadId: string;
     matchKeywords: boolean;
+    sort?: string;
   };
   lastSeenAt?: string | null;
 }

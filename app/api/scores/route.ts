@@ -1,8 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getDb } from "@/db";
 import { calculateScore } from "@/lib/scoring";
 
-function rescoreAll(db: ReturnType<typeof getDb>) {
+export async function POST() {
+  const db = getDb();
+
   const profileKeywords = (
     db.prepare("SELECT keyword FROM profile_keywords ORDER BY keyword").all() as { keyword: string }[]
   ).map((r) => r.keyword);
@@ -12,26 +14,13 @@ function rescoreAll(db: ReturnType<typeof getDb>) {
     .all() as { id: number; content: string; is_remote: number }[];
 
   const update = db.prepare("UPDATE posts SET relevance_score = ? WHERE id = ?");
+
   db.transaction(() => {
     for (const post of posts) {
       const score = calculateScore(post.content, profileKeywords, post.is_remote === 1);
       update.run(score, post.id);
     }
   })();
-}
 
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params;
-  const keywordId = Number(id);
-  if (isNaN(keywordId)) {
-    return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
-  }
-
-  const db = getDb();
-  db.prepare("DELETE FROM profile_keywords WHERE id = ?").run(keywordId);
-  rescoreAll(db);
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ scored: posts.length });
 }

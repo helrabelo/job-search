@@ -167,6 +167,7 @@ interface SidebarFilters {
   search: string;
   threadId: string;
   matchKeywords: boolean;
+  sort?: string;
 }
 
 export function StatsSidebar({ filters }: { filters: SidebarFilters }) {
