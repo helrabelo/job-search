@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { StatusSelect } from "./status-select";
 import { ApplyEmailForm } from "./apply-email-form";
 import { CompanyResearch } from "./company-research";
+import { CoverLetter } from "./cover-letter";
 import { highlightHtmlContent } from "@/lib/highlight";
 import { timeAgo } from "@/lib/time";
 import type { DismissReason, Post, PostStatus } from "@/lib/types";
@@ -242,6 +243,9 @@ export function PostDetail({ post, profileKeywords = [], onUpdate, onClose }: Po
 
         {/* Company Research */}
         <CompanyResearch postId={post.id} />
+
+        {/* Cover Letter */}
+        <CoverLetter postId={post.id} />
 
         {/* Secondary controls */}
         <div className="space-y-4 p-5">

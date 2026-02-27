@@ -104,6 +104,20 @@ const migrations: Migration[] = [
       );
     `,
   },
+  {
+    version: 7,
+    name: "add_cover_letters",
+    up: `
+      CREATE TABLE IF NOT EXISTS cover_letters (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        post_id INTEGER NOT NULL REFERENCES posts(id),
+        content TEXT NOT NULL,
+        version INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+    `,
+  },
 ];
 
 let migrated = false;
