@@ -15,6 +15,7 @@ export interface ScrapedPost {
   is_remote: boolean;
   posted_at: string;
   source: string;
+  apply_url?: string | null;
 }
 
 export interface ScraperResult {

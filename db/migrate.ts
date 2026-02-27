@@ -126,6 +126,13 @@ const migrations: Migration[] = [
       ALTER TABLE posts ADD COLUMN source TEXT NOT NULL DEFAULT 'hn';
     `,
   },
+  {
+    version: 9,
+    name: "add_apply_url",
+    up: `
+      ALTER TABLE posts ADD COLUMN apply_url TEXT;
+    `,
+  },
 ];
 
 let migrated = false;

@@ -48,6 +48,7 @@ export const remoteOkScraper: ScraperPlugin = {
         is_remote: true,
         posted_at: job.date || now.toISOString(),
         source: "remoteok",
+        apply_url: job.url || null,
       };
     });
 

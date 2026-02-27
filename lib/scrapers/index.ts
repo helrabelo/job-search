@@ -46,8 +46,8 @@ export async function runScrapers(sourceName?: string): Promise<MultiScrapeResul
   `);
 
   const insertPost = db.prepare(`
-    INSERT OR IGNORE INTO posts (id, thread_id, author, content, company, is_remote, posted_at, first_seen_at, relevance_score, source)
-    VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), ?, ?)
+    INSERT OR IGNORE INTO posts (id, thread_id, author, content, company, is_remote, posted_at, first_seen_at, relevance_score, source, apply_url)
+    VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'), ?, ?, ?)
   `);
 
   let totalNew = 0;
@@ -87,7 +87,8 @@ export async function runScrapers(sourceName?: string): Promise<MultiScrapeResul
           post.is_remote ? 1 : 0,
           post.posted_at,
           score,
-          post.source
+          post.source,
+          post.apply_url ?? null
         );
         sourceNew++;
         totalNew++;

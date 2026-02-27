@@ -42,6 +42,7 @@ export const wwrScraper: ScraperPlugin = {
         is_remote: true,
         posted_at: pubDate ? new Date(pubDate).toISOString() : now.toISOString(),
         source: "weworkremotely",
+        apply_url: link || null,
       };
     });
 

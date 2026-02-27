@@ -45,6 +45,7 @@ export interface Post {
   first_seen_at: string | null;
   relevance_score: number;
   source: string;
+  apply_url: string | null;
   updated_at: string;
   created_at: string;
 }
