@@ -37,10 +37,13 @@ export async function GET(request: NextRequest) {
     values.push(term, term);
   }
 
-  const source = params.get("source");
-  if (source) {
-    conditions.push("p.source = ?");
-    values.push(source);
+  const sources = params.get("sources");
+  if (sources) {
+    const sourceList = sources.split(",").filter(Boolean);
+    if (sourceList.length > 0) {
+      conditions.push(`p.source IN (${sourceList.map(() => "?").join(",")})`);
+      values.push(...sourceList);
+    }
   }
 
   // Filter by profile keywords

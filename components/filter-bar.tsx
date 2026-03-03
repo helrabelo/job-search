@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useThreads } from "@/lib/hooks/use-threads";
 import { KeywordManager } from "./keyword-manager";
 
 const STATUS_TABS: { value: string; label: string }[] = [
@@ -13,14 +12,19 @@ const STATUS_TABS: { value: string; label: string }[] = [
   { value: "dismissed", label: "Dismissed" },
 ];
 
+const SOURCES: { value: string; label: string }[] = [
+  { value: "hn", label: "Hacker News" },
+  { value: "remoteok", label: "RemoteOK" },
+  { value: "weworkremotely", label: "WWR" },
+];
+
 interface Filters {
   status: string;
   remote: boolean;
   search: string;
-  threadId: string;
   matchKeywords: boolean;
   sort?: string;
-  source?: string;
+  sources: string[];
 }
 
 interface FilterBarProps {
@@ -29,8 +33,15 @@ interface FilterBarProps {
 }
 
 export function FilterBar({ filters, onChange }: FilterBarProps) {
-  const threads = useThreads();
   const [showKeywordManager, setShowKeywordManager] = useState(false);
+
+  function toggleSource(source: string) {
+    const current = filters.sources;
+    const next = current.includes(source)
+      ? current.filter((s) => s !== source)
+      : [...current, source];
+    onChange({ ...filters, sources: next });
+  }
 
   return (
     <div className="space-y-3">
@@ -51,7 +62,7 @@ export function FilterBar({ filters, onChange }: FilterBarProps) {
         ))}
       </div>
 
-      {/* Second row: remote toggle, thread select, search */}
+      {/* Second row: toggles, source buttons, sort, search */}
       <div className="flex flex-wrap items-center gap-3">
         <label className="flex cursor-pointer items-center gap-2 rounded-lg bg-white px-3 py-1.5 text-sm">
           <input
@@ -84,29 +95,28 @@ export function FilterBar({ filters, onChange }: FilterBarProps) {
           Manage keywords
         </button>
 
-        <select
-          value={filters.threadId}
-          onChange={(e) => onChange({ ...filters, threadId: e.target.value })}
-          className="rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-        >
-          <option value="">All threads</option>
-          {threads.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.month} ({t.post_count} posts)
-            </option>
-          ))}
-        </select>
-
-        <select
-          value={filters.source ?? "all"}
-          onChange={(e) => onChange({ ...filters, source: e.target.value === "all" ? undefined : e.target.value })}
-          className="rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-        >
-          <option value="all">All sources</option>
-          <option value="hn">Hacker News</option>
-          <option value="remoteok">RemoteOK</option>
-          <option value="weworkremotely">WeWorkRemotely</option>
-        </select>
+        {/* Source toggle buttons */}
+        <div className="flex items-center gap-1">
+          <span className="mr-1 text-xs text-neutral-400">Sources:</span>
+          {SOURCES.map((src) => {
+            const isActive =
+              filters.sources.length === 0 ||
+              filters.sources.includes(src.value);
+            return (
+              <button
+                key={src.value}
+                onClick={() => toggleSource(src.value)}
+                className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+                  isActive
+                    ? "bg-neutral-800 text-white"
+                    : "bg-neutral-100 text-neutral-400 line-through"
+                }`}
+              >
+                {src.label}
+              </button>
+            );
+          })}
+        </div>
 
         <select
           value={filters.sort ?? "default"}

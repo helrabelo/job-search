@@ -92,9 +92,25 @@ export function PostCard({ post, profileKeywords = [], selected, isNew, onSelect
                 {post.relevance_score}
               </span>
             )}
-            {post.source && post.source !== "hn" && (
-              <span className="shrink-0 rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-medium text-indigo-600">
-                {post.source === "remoteok" ? "RemoteOK" : post.source === "weworkremotely" ? "WWR" : post.source}
+            {post.source && (
+              <span
+                className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                  post.source === "hn"
+                    ? "bg-orange-50 text-orange-400"
+                    : post.source === "remoteok"
+                      ? "bg-indigo-50 text-indigo-400"
+                      : post.source === "weworkremotely"
+                        ? "bg-violet-50 text-violet-400"
+                        : "bg-neutral-50 text-neutral-400"
+                }`}
+              >
+                {post.source === "hn"
+                  ? "HN"
+                  : post.source === "remoteok"
+                    ? "RemoteOK"
+                    : post.source === "weworkremotely"
+                      ? "WWR"
+                      : post.source}
               </span>
             )}
             {post.is_remote === 1 && (

@@ -8,6 +8,24 @@ import { PostList } from "@/components/post-list";
 import { StatsSidebar } from "@/components/stats-sidebar";
 
 const LAST_SEEN_KEY = "hn-tracker-last-seen";
+const FILTERS_KEY = "job-tracker-filters";
+
+const DEFAULT_FILTERS = {
+  status: "all",
+  remote: false,
+  search: "",
+  matchKeywords: false,
+  sources: [] as string[],
+} as const;
+
+type Filters = {
+  status: string;
+  remote: boolean;
+  search: string;
+  matchKeywords: boolean;
+  sort?: string;
+  sources: string[];
+};
 
 function getLastSeen(): string | null {
   if (typeof window === "undefined") return null;
@@ -18,23 +36,38 @@ function updateLastSeen() {
   localStorage.setItem(LAST_SEEN_KEY, new Date().toISOString());
 }
 
+function loadFilters(): Filters {
+  if (typeof window === "undefined") return { ...DEFAULT_FILTERS };
+  try {
+    const raw = localStorage.getItem(FILTERS_KEY);
+    if (!raw) return { ...DEFAULT_FILTERS };
+    const saved = JSON.parse(raw);
+    return {
+      status: saved.status ?? DEFAULT_FILTERS.status,
+      remote: saved.remote ?? DEFAULT_FILTERS.remote,
+      search: "", // never persist search — it's ephemeral
+      matchKeywords: saved.matchKeywords ?? DEFAULT_FILTERS.matchKeywords,
+      sort: saved.sort,
+      sources: Array.isArray(saved.sources) ? saved.sources : [],
+    };
+  } catch {
+    return { ...DEFAULT_FILTERS };
+  }
+}
+
+function saveFilters(filters: Filters) {
+  const { search, ...rest } = filters;
+  localStorage.setItem(FILTERS_KEY, JSON.stringify(rest));
+}
+
 function DashboardContent() {
-  const [filters, setFilters] = useState<{
-    status: string;
-    remote: boolean;
-    search: string;
-    threadId: string;
-    matchKeywords: boolean;
-    sort?: string;
-    source?: string;
-  }>({
-    status: "all",
-    remote: false,
-    search: "",
-    threadId: "",
-    matchKeywords: false,
-  });
+  const [filters, setFilters] = useState<Filters>(() => loadFilters());
   const [lastSeenAt, setLastSeenAt] = useState<string | null>(null);
+
+  // Persist filter changes to localStorage
+  useEffect(() => {
+    saveFilters(filters);
+  }, [filters]);
 
   useEffect(() => {
     setLastSeenAt(getLastSeen());
@@ -49,10 +82,10 @@ function DashboardContent() {
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-neutral-900">
-            HN Job Tracker
+            Job Tracker
           </h1>
           <p className="text-sm text-neutral-500">
-            Browse &quot;Who is Hiring&quot; posts from Hacker News
+            Job posts from HN, RemoteOK &amp; WeWorkRemotely
           </p>
         </div>
         <RefreshButton />

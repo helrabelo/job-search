@@ -8,10 +8,9 @@ interface Filters {
   status: string;
   remote: boolean;
   search: string;
-  threadId: string;
   matchKeywords: boolean;
   sort?: string;
-  source?: string;
+  sources: string[];
 }
 
 interface UsePostsResult {
@@ -45,10 +44,9 @@ export function usePosts(filters: Filters): UsePostsResult {
     if (filters.status !== "all") params.set("status", filters.status);
     if (filters.remote) params.set("remote", "1");
     if (filters.search) params.set("search", filters.search);
-    if (filters.threadId) params.set("thread_id", filters.threadId);
     if (filters.matchKeywords) params.set("match_keywords", "1");
     if (filters.sort) params.set("sort", filters.sort);
-    if (filters.source) params.set("source", filters.source);
+    if (filters.sources.length > 0) params.set("sources", filters.sources.join(","));
     params.set("page", String(page));
 
     try {
